@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
-  Crown, Check, Star, ChevronDown, Zap, Shield, MessageCircle, Eye, Heart,
-  Sparkles, Users, BadgeCheck, ChevronRight, Infinity, Video, Brain,
+  Crown, Check, Star, ChevronDown, Zap,
+  Sparkles, Loader2, AlertCircle, X,
 } from 'lucide-react'
 
 const PLANS = [
@@ -122,16 +123,39 @@ function XIcon({ className }: { className?: string }) {
 }
 
 export default function SubscriptionPage() {
+  const router = useRouter()
   const [isYearly, setIsYearly] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [modalPlan, setModalPlan] = useState<string | null>(null)
 
   const handleSelect = async (planName: string) => {
     setSelectedPlan(planName)
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    setLoading(false)
+    try {
+      const price = isYearly ? PLANS.find(p => p.name === planName)?.yearlyPrice : PLANS.find(p => p.name === planName)?.monthlyPrice
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planName.toLowerCase(), billing: isYearly ? 'yearly' : 'monthly', price }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setModalPlan(planName)
+        setShowModal(true)
+      } else {
+        setModalPlan(planName)
+        setShowModal(true)
+      }
+    } catch {
+      setModalPlan(planName)
+      setShowModal(true)
+    } finally {
+      setLoading(false)
+      setSelectedPlan(null)
+    }
   }
 
   return (
@@ -362,6 +386,50 @@ export default function SubscriptionPage() {
           All plans are backed by a 7-day money-back guarantee. No questions asked.
         </p>
       </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-8 h-8 text-[#C9A227]" />
+              </div>
+              <h3 className="text-xl font-bold text-brand-navy mb-2">
+                {modalPlan} Plan Selected
+              </h3>
+              <p className="text-sm text-brand-navy/60 mb-6">
+                Thank you for choosing the {modalPlan} plan! Our team will contact you shortly to complete the subscription process. You can also complete payment from your dashboard settings.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-brand-navy/70 hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => { setShowModal(false); router.push('/settings') }}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#C9A227] to-[#d4af37] text-[#0B1488] text-sm font-bold hover:shadow-lg transition-all"
+                >
+                  Go to Settings
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
