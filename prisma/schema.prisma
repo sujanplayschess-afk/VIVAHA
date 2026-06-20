@@ -1,0 +1,608 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  USER
+  PREMIUM_USER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+  BANNED
+  DELETED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ProfileCreatedBy {
+  SELF
+  PARENT
+  SIBLING
+  RELATIVE
+  FRIEND
+}
+
+enum BodyType {
+  SLIM
+  AVERAGE
+  ATHLETIC
+  HEAVY
+}
+
+enum Complexion {
+  VERY_FAIR
+  FAIR
+  WHEATISH
+  DARK
+}
+
+enum PhysicalStatus {
+  NORMAL
+  PHYSICALLY_CHALLENGED
+}
+
+enum Dosham {
+  YES
+  NO
+  DONT_KNOW
+}
+
+enum EmploymentSector {
+  GOVERNMENT
+  PRIVATE
+  BUSINESS
+  DEFENCE
+  SELF_EMPLOYED
+  NOT_WORKING
+}
+
+enum ResidentialStatus {
+  CITIZEN
+  PERMANENT_RESIDENT
+  WORK_PERMIT
+  STUDENT_VISA
+  TEMPORARY_VISA
+}
+
+enum FamilyType {
+  JOINT
+  NUCLEAR
+}
+
+enum FamilyStatus {
+  MIDDLE_CLASS
+  UPPER_MIDDLE_CLASS
+  RICH
+  AFFLUENT
+}
+
+enum FamilyValues {
+  ORTHODOX
+  TRADITIONAL
+  MODERATE
+  LIBERAL
+}
+
+enum DietType {
+  VEGETARIAN
+  NON_VEGETARIAN
+  EGGETARIAN
+  VEGAN
+  JAIN
+}
+
+enum SmokingHabit {
+  NO
+  YES
+  OCCASIONALLY
+}
+
+enum DrinkingHabit {
+  NO
+  YES
+  OCCASIONALLY
+  SOCIALLY
+}
+
+enum MaritalStatus {
+  NEVER_MARRIED
+  DIVORCED
+  WIDOWED
+  AWAITING_DIVORCE
+  ANNULLED
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum ChatType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
+  AUDIO
+  VIDEO_CALL_REQUEST
+  CONTACT_SHARED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  ON_HOLD
+}
+
+enum PaymentGateway {
+  RAZORPAY
+  PHONEPE
+  PAYTM
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum NotificationType {
+  INTEREST_RECEIVED
+  INTEREST_ACCEPTED
+  MESSAGE_RECEIVED
+  PROFILE_VIEWED
+  SYSTEM_ALERT
+  SUBSCRIPTION_UPDATE
+}
+
+enum DocumentType {
+  AADHAAR
+  PAN
+  PASSPORT
+  VOTER_ID
+  EDUCATION_CERT
+  INCOME_PROOF
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                  String              @id @default(cuid())
+  profileId           String              @unique
+  email               String              @unique
+  phone               String?             @unique
+  passwordHash        String?
+  role                UserRole            @default(USER)
+  status              AccountStatus       @default(PENDING_VERIFICATION)
+  emailVerified       Boolean             @default(false)
+  phoneVerified       Boolean             @default(false)
+  idVerified          Boolean             @default(false)
+  photoVerified       Boolean             @default(false)
+  lastLogin           DateTime?
+  loginCount          Int                 @default(0)
+  otp                 String?
+  otpExpiresAt        DateTime?
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  deletedAt           DateTime?
+
+  profile           Profile?
+  subscription      Subscription?
+  sentInterests     Interest[]            @relation("SentInterests")
+  receivedInterests Interest[]            @relation("ReceivedInterests")
+  sentMessages      Message[]             @relation("SentMessages")
+  receivedMessages  Message[]             @relation("ReceivedMessages")
+  chatRooms         ChatRoomMember[]
+  shortlisted       Shortlist[]           @relation("ShortlistedBy")
+  shortlistedBy     Shortlist[]           @relation("ShortlistedUser")
+  profileViews      ProfileView[]         @relation("Viewer")
+  profileViewedBy   ProfileView[]         @relation("Viewed")
+  blockedUsers      BlockedUser[]         @relation("Blocker")
+  blockedByUsers    BlockedUser[]         @relation("Blocked")
+  reports           Report[]              @relation("Reporter")
+  reportedBy        Report[]              @relation("Reported")
+  notifications     Notification[]
+  loginHistory      LoginHistory[]
+  verificationDocs  VerificationDocument[]
+  payments          Payment[]
+  preferences       PartnerPreference?
+  privacySettings   PrivacySettings?
+  successStory      SuccessStory?
+  activityLog       ActivityLog[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([profileId])
+  @@index([status])
+}
+
+model Profile {
+  id                  String          @id @default(cuid())
+  userId              String          @unique
+  user                User            @relation(fields: [userId], references: [id])
+
+  firstName           String
+  lastName            String
+  displayName         String?
+  gender              Gender
+  dateOfBirth         DateTime
+  age                 Int
+  profileCreatedBy    ProfileCreatedBy
+
+  height              Float
+  weight              Float?
+  bodyType            BodyType?
+  complexion          Complexion?
+  physicalStatus      PhysicalStatus  @default(NORMAL)
+  bloodGroup          String?
+
+  religion            String
+  caste               String?
+  subCaste            String?
+  gothram             String?
+  star                String?
+  rashi               String?
+  dosham              Dosham?
+  motherTongue        String
+  languages           String
+
+  highestEducation    String
+  educationDetail     String?
+  college             String?
+  employedIn          EmploymentSector?
+  occupation          String?
+  organization        String?
+  annualIncome        String?
+  incomePrivacy       Boolean         @default(false)
+
+  country             String          @default("India")
+  state               String
+  city                String
+  citizenship         String?
+  residentialStatus   ResidentialStatus?
+
+  familyType          FamilyType?
+  familyStatus        FamilyStatus?
+  familyValues        FamilyValues?
+  fatherName          String?
+  fatherOccupation    String?
+  motherName          String?
+  motherOccupation    String?
+  brothers            Int?            @default(0)
+  brothersMarried     Int?            @default(0)
+  sisters             Int?            @default(0)
+  sistersMarried      Int?            @default(0)
+  familyIncome        String?
+  aboutFamily         String?
+
+  diet                DietType?
+  smoking             SmokingHabit?
+  drinking            DrinkingHabit?
+
+  horoscopeAvailable  Boolean         @default(false)
+  placeOfBirth        String?
+  timeOfBirth         String?
+  horoscopeChart      Json?
+
+  aboutMe             String?         
+  partnerExpectation  String?         
+
+  photos              ProfilePhoto[]
+  photoCount          Int             @default(0)
+
+  profileCompletion   Int             @default(0)
+  isHighlighted       Boolean         @default(false)
+  isFeatured          Boolean         @default(false)
+  profileScore        Float           @default(0)
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([gender])
+  @@index([religion, caste])
+  @@index([state, city])
+  @@index([age])
+}
+
+model PartnerPreference {
+  id                  String              @id @default(cuid())
+  userId              String              @unique
+  user                User                @relation(fields: [userId], references: [id])
+
+  ageFrom             Int?
+  ageTo               Int?
+  heightFrom          Float?
+  heightTo            Float?
+  maritalStatus       String
+  bodyType            String
+  complexion          String
+  physicalStatus      String
+  diet                String
+  smoking             String
+  drinking            String
+
+  religion            String
+  caste               String
+  subCaste            String
+  motherTongue        String
+  dosham              String
+  star                String
+
+  education           String
+  employedIn          String
+  occupation          String
+  annualIncomeFrom    String?
+  annualIncomeTo      String?
+
+  country             String
+  state               String
+  city                String
+  residentialStatus   String
+
+  description         String?         
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model Interest {
+  id          String          @id @default(cuid())
+  senderId    String
+  receiverId  String
+  sender      User            @relation("SentInterests", fields: [senderId], references: [id])
+  receiver    User            @relation("ReceivedInterests", fields: [receiverId], references: [id])
+  status      InterestStatus  @default(PENDING)
+  message     String?
+  respondedAt DateTime?
+  createdAt   DateTime        @default(now())
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+model Shortlist {
+  id              String   @id @default(cuid())
+  userId          String
+  shortlistedId   String
+  user            User     @relation("ShortlistedBy", fields: [userId], references: [id])
+  shortlistedUser User     @relation("ShortlistedUser", fields: [shortlistedId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, shortlistedId])
+}
+
+model ProfileView {
+  id         String   @id @default(cuid())
+  viewerId   String
+  viewedId   String
+  viewer     User     @relation("Viewer", fields: [viewerId], references: [id])
+  viewed     User     @relation("Viewed", fields: [viewedId], references: [id])
+  count      Int      @default(1)
+  lastViewed DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@unique([viewerId, viewedId])
+}
+
+model ChatRoom {
+  id        String           @id @default(cuid())
+  type      ChatType         @default(DIRECT)
+  members   ChatRoomMember[]
+  messages  Message[]
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model ChatRoomMember {
+  id         String   @id @default(cuid())
+  chatRoomId String
+  userId     String
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  joinedAt   DateTime @default(now())
+  lastReadAt DateTime?
+
+  @@unique([chatRoomId, userId])
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  chatRoomId String
+  senderId   String
+  receiverId String
+  chatRoom   ChatRoom    @relation(fields: [chatRoomId], references: [id])
+  sender     User        @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User        @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String      
+  type       MessageType @default(TEXT)
+  mediaUrl   String?
+  isRead     Boolean     @default(false)
+  readAt     DateTime?
+  isDeleted  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+
+  @@index([chatRoomId, createdAt])
+}
+
+model SubscriptionPlan {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  price           Float
+  duration        Int
+  contactsAllowed Int
+  messagesPerDay  Int
+  interestsPerDay Int
+  features        Json
+  isPopular       Boolean        @default(false)
+  isActive        Boolean        @default(true)
+  subscriptions   Subscription[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Subscription {
+  id         String             @id @default(cuid())
+  userId     String             @unique
+  user       User               @relation(fields: [userId], references: [id])
+  planId     String
+  plan       SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status     SubscriptionStatus @default(ACTIVE)
+  startDate  DateTime
+  endDate    DateTime
+  autoRenew  Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model Payment {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  amount           Float
+  currency         String         @default("INR")
+  gateway          PaymentGateway
+  gatewayOrderId   String?
+  gatewayPaymentId String?
+  status           PaymentStatus  @default(PENDING)
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id])
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reportedId  String
+  reporter    User         @relation("Reporter", fields: [reporterId], references: [id])
+  reported    User         @relation("Reported", fields: [reportedId], references: [id])
+  reason      String
+  description String?
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      NotificationType
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ipAddress String?
+  device    String?
+  browser   String?
+  location  String?
+  createdAt DateTime @default(now())
+}
+
+model VerificationDocument {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  type      DocumentType
+  url       String
+  status    VerificationStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model SuccessStory {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  partnerName String
+  story       String   
+  image       String?
+  weddingDate DateTime?
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model PrivacySettings {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id])
+  showPhoto        Boolean @default(true)
+  showPhone        Boolean @default(false)
+  showEmail        Boolean @default(false)
+  showIncome       Boolean @default(false)
+  allowChat        Boolean @default(true)
+  profileDiscovery Boolean @default(true)
+}
+
+model ProfilePhoto {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id])
+  url        String
+  isPrimary  Boolean  @default(false)
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
