@@ -1,6 +1,6 @@
 $projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $phpDir = Join-Path $projectDir "php74"
-$installDir = Join-Path $projectDir "install"
+$installDir = $projectDir
 $mdir = Join-Path $projectDir "mariadb\mariadb-11.4.5-winx64"
 
 $oldPath = $env:Path
