@@ -1,32 +1,29 @@
-/bootstrap/compiled.php
-/bootstrap/cache/
-.env.*.php
-.env.php
-/node_modules
-/public/hot
-/public/storage
-/public/uploads
-/storage/*.key
-/vendor
-/temp
-/.idea
-/.vscode
-/.vagrant
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-.DS_Store
-.idea/
-updates/
-composer.lock
-*.lock
-resources/lang/en.json
+# Environment and Database
+/mariadb
+/php
+/php74
+/sqlupdates
+*.sql
+*.zip
 
+# Laravel
 .env
-updates.zip
-ecommerce.zip
-install.zip
-/nbproject/private/
-/nbproject
-matrimonial_laravel.zip
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js (not needed on Railway — assets are pre-compiled)
+package.json
+package-lock.json
+webpack.mix.js
+node_modules/
